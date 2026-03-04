@@ -5,7 +5,9 @@ userAgentString = ""
 
 def main():
     links = getLinks("Tokyo")
-    print(links)
+    targetPage = "1920 Summer Olympics"
+    if targetPagePresent(targetPage, links):
+        print("Found!")
 
 
 def getLinks(title: str):
@@ -20,6 +22,13 @@ def getLinks(title: str):
     rJson = r.json()
     links = next(iter(rJson["query"]["pages"].values()))["links"]
     return links
+
+
+def targetPagePresent(targetPage: str, links):
+    for link in links:
+        if link["title"] == targetPage:
+            return True
+    return False
 
 
 main()
