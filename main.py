@@ -1,6 +1,6 @@
 import requests
 
-maxDepth = 1
+maxDepth = 2
 
 with open("resources/header.txt", "r") as file:
     userAgentString = file.read().strip()
@@ -8,21 +8,27 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("MV Mariam", "Merchant ship")
+    result = findTargetPage("Japan", "Beatrix Potter")
     print(result)
 
 
-def findTargetPage(title: str, targetPage: str, path=[], depth=0):
+def findTargetPage(
+    title: str, targetPage: str, path=[], queue=[], explored=[], depth=0
+):
     print(f"Title is {title} and target is {targetPage} and depth is {depth}")
     links = getLinks(title)
+    addToQueue(queue, links)
     path.append(title)
+    explored.append(title)
     if targetPagePresent(targetPage, links):
         return [True, path]
     elif depth < maxDepth:
-        for link in links:
-            result = findTargetPage(link["title"], targetPage, path, depth + 1)
+        while len(queue) > 0:
+            next = queue.pop(0)
+            result = findTargetPage(next["title"], targetPage, path, queue, explored)
             if result[0]:
                 return result
+    return [False, None]
 
 
 # Add a type annotation for params?
