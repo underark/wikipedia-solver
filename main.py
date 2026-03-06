@@ -1,6 +1,7 @@
 import requests
+import random
 
-maxDepth = 1
+maxDepth = 3
 
 with open("resources/header.txt", "r") as file:
     userAgentString = file.read().strip()
@@ -8,22 +9,25 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Japan", "Money")
+    result = findTargetPage("Japan", "Archipelago")
     print(result)
 
 
 def findTargetPage(title: str, targetPage: str, explored=[], depth=0):
     print(f"Title is {title} and target is {targetPage} and depth is {depth}")
+    explored.append(title)
     if title == targetPage:
         return True
     elif depth < maxDepth:
         links = getLinks(title)
+        random.shuffle(links)
         for link in links:
             if link["title"] not in explored:
-                explored.append(link["title"])
                 result = findTargetPage(link["title"], targetPage, explored, depth + 1)
                 if result:
                     return result
+            else:
+                print(link["title"])
     return False
 
 
