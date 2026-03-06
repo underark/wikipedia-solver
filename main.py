@@ -1,4 +1,5 @@
 import requests
+from collections import deque
 
 maxDepth = 2
 
@@ -12,11 +13,13 @@ def main():
     print(result)
 
 
-def findTargetPage(start: str, targetPage: str, queue=[], explored=[], maxNodes=100):
+def findTargetPage(
+    start: str, targetPage: str, queue=deque([]), explored=[], maxNodes=100
+):
     queue.append(start)
     explored.append(start)
-    while len(queue) > 0 & len(explored) < maxNodes:
-        next = queue.pop(0)
+    while len(queue) > 0:
+        next = queue.popleft()
         print(next)
         if next == targetPage:
             return True
