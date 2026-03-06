@@ -8,22 +8,23 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("MV Mariam", "Merchant ship")
+    result = findTargetPage("Japan", "Money")
     print(result)
 
 
-def findTargetPage(title: str, targetPage: str, path=[], depth=0):
+def findTargetPage(title: str, targetPage: str, explored=[], depth=0):
     print(f"Title is {title} and target is {targetPage} and depth is {depth}")
-    links = getLinks(title)
-    path.append(title)
-    if targetPagePresent(targetPage, links):
-        return [True, path]
+    if title == targetPage:
+        return True
     elif depth < maxDepth:
+        links = getLinks(title)
         for link in links:
-            result = findTargetPage(link["title"], targetPage, path, depth + 1)
-            if result[0]:
-                return result
-    return [False, None]
+            if link["title"] not in explored:
+                explored.append(link["title"])
+                result = findTargetPage(link["title"], targetPage, explored, depth + 1)
+                if result:
+                    return result
+    return False
 
 
 # Add a type annotation for params?
