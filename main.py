@@ -8,27 +8,24 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Japan", "Beatrix Potter")
+    result = findTargetPage("Japan", "Archipelago")
     print(result)
 
 
-def findTargetPage(
-    title: str, targetPage: str, path=[], queue=[], explored=[], depth=0
-):
-    print(f"Title is {title} and target is {targetPage} and depth is {depth}")
-    links = getLinks(title)
-    addToQueue(queue, links)
-    path.append(title)
-    explored.append(title)
-    if targetPagePresent(targetPage, links):
-        return [True, path]
-    elif depth < maxDepth:
-        while len(queue) > 0:
-            next = queue.pop(0)
-            result = findTargetPage(next["title"], targetPage, path, queue, explored)
-            if result[0]:
-                return result
-    return [False, None]
+def findTargetPage(start: str, targetPage: str, queue=[], explored=[], maxNodes=100):
+    queue.append(start)
+    explored.append(start)
+    while len(queue) > 0 & len(explored) < maxNodes:
+        next = queue.pop(0)
+        print(next)
+        if next == targetPage:
+            return True
+        links = getLinks(next)
+        for link in links:
+            if link["title"] not in explored:
+                explored.append(link["title"])
+                queue.append(link["title"])
+    return False
 
 
 # Add a type annotation for params?
