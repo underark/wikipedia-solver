@@ -23,7 +23,6 @@ def findTargetPage(title: str, targetPage: str, path=[], depth=0):
             result = findTargetPage(link["title"], targetPage, path, depth + 1)
             if result[0]:
                 return result
-    return [False, None]
 
 
 # Add a type annotation for params?
