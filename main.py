@@ -12,16 +12,18 @@ def main():
     print(result)
 
 
-def findTargetPage(title: str, targetPage: str, depth=0):
+def findTargetPage(title: str, targetPage: str, path=[], depth=0):
     print(f"Title is {title} and target is {targetPage} and depth is {depth}")
     links = getLinks(title)
-
+    path.append(title)
     if targetPagePresent(targetPage, links):
-        return True
+        return [True, path]
     elif depth < maxDepth:
-        return any(
-            findTargetPage(link["title"], targetPage, depth + 1) for link in links
-        )
+        for link in links:
+            result = findTargetPage(link["title"], targetPage, path, depth + 1)
+            if result[0]:
+                return result
+    return [False, None]
 
 
 # Add a type annotation for params?
