@@ -1,5 +1,4 @@
 import requests
-import random
 
 maxDepth = 3
 
@@ -9,25 +8,26 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Japan", "Archipelago")
+    result = findTargetPage("Japan", "Archipelago", set(), [])
     print(result)
 
 
-def findTargetPage(title: str, targetPage: str, explored=[], depth=0):
+def findTargetPage(title: str, targetPage: str, explored, path, depth=0):
     print(f"Title is {title} and target is {targetPage} and depth is {depth}")
-    explored.append(title)
+    explored.add(title)
+    path.append(title)
     if title == targetPage:
-        return True
+        return path
     elif depth < maxDepth:
         links = getLinks(title)
-        random.shuffle(links)
         for link in links:
             if link["title"] not in explored:
-                result = findTargetPage(link["title"], targetPage, explored, depth + 1)
+                result = findTargetPage(
+                    link["title"], targetPage, explored, path, depth + 1
+                )
                 if result:
                     return result
-            else:
-                print(link["title"])
+    path.pop()
     return False
 
 
