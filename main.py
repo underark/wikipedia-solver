@@ -9,7 +9,7 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = getLinks("Japan", "Archipelago")
+    result = findTargetPage("Japan", "Archipelago")
     print(result)
 
 
@@ -20,18 +20,39 @@ def findTargetPage(
     endQueue=None,
     startExplored=None,
     endExplored=None,
+    paths=None,
 ):
     if startQueue is None or endQueue is None:
-        startQueue, endQueue = deque()
+        startQueue, endQueue = deque(), deque()
 
     if startExplored is None or endExplored is None:
-        startExplored, endExplored = {}
+        startExplored, endExplored = set(), set()
+
+    if paths is None:
+        paths = {}
 
     startQueue.append(start)
+    startExplored.add(start)
     endQueue.append(targetPage)
-    while len(startQueue) > 0:
+    endExplored.add(targetPage)
+    while len(startQueue) > 0 or len(endQueue) > 0:
         startNext = startQueue.popleft()
         endNext = endQueue.popleft()
+        if not startExplored.isdisjoint(endExplored):
+            return True
+        else:
+            linksDict = getLinks(startNext, endNext)
+            for key in linksDict:
+                links = linksDict[key]
+                if key == startNext:
+                    for link in links:
+                        startQueue.append(link)
+                        startExplored.add(link)
+                else:
+                    for link in links:
+                        endQueue.append(link)
+                        endExplored.add(link)
+    return False
 
 
 # Add a type annotation for params?
