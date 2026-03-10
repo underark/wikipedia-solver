@@ -5,30 +5,33 @@ maxDepth = 2
 
 with open("resources/header.txt", "r") as file:
     userAgentString = file.read().strip()
-    headers = {"User-Agent": userAgentString}
+    headers = {"User-Agent": userAgentString, "Accept-Encoding": "gzip"}
 
 
 def main():
-    result = findTargetPage("Japan", "Archipelago")
+    result = getLinks("Japan", "Archipelago")
     print(result)
 
 
 def findTargetPage(
-    start: str, targetPage: str, queue=deque([]), explored=[], maxNodes=100
+    start: str,
+    targetPage: str,
+    startQueue=None,
+    endQueue=None,
+    startExplored=None,
+    endExplored=None,
 ):
-    queue.append(start)
-    explored.append(start)
-    while len(queue) > 0:
-        next = queue.popleft()
-        print(next)
-        if next == targetPage:
-            return True
-        links = getLinks(next)
-        for link in links:
-            if link["title"] not in explored:
-                explored.append(link["title"])
-                queue.append(link["title"])
-    return False
+    if startQueue is None or endQueue is None:
+        startQueue, endQueue = deque()
+
+    if startExplored is None or endExplored is None:
+        startExplored, endExplored = {}
+
+    startQueue.append(start)
+    endQueue.append(targetPage)
+    while len(startQueue) > 0:
+        startNext = startQueue.popleft()
+        endNext = endQueue.popleft()
 
 
 # Add a type annotation for params?
@@ -39,47 +42,49 @@ def makeRequest(params, headers):
     return rJson
 
 
-def getLinks(title: str):
-    queue = []
+def getLinks(title: str, title2):
+    queues = {}
     result = makeRequest(
         (
             ("action", "query"),
-            ("generator", "links"),
-            ("titles", title),
+            ("prop", "links"),
+            ("titles", title + "|" + title2),
             ("format", "json"),
             ("formatversion", "2"),
-            ("gpllimit", "max"),
+            ("pllimit", "max"),
         ),
         headers,
     )
 
-    addToQueue(queue, result["query"]["pages"])
+    for page in result["query"]["pages"]:
+        if "title" in page.keys():
+            queues.update({page["title"]: []})
+        if "links" in page.keys():
+            queue = queues[page["title"]]
+            for link in page["links"]:
+                queue.append(link["title"])
 
     while "continue" in result.keys():
         result = makeRequest(
             (
                 ("action", "query"),
-                ("generator", "links"),
-                ("titles", title),
+                ("prop", "links"),
+                ("titles", title + "|" + title2),
                 ("format", "json"),
                 ("formatversion", "2"),
-                ("gplcontinue", result["continue"]["gplcontinue"]),
-                ("gpllimit", "max"),
+                ("plcontinue", result["continue"]["plcontinue"]),
+                ("pllimit", "max"),
             ),
             headers,
         )
-        addToQueue(queue, result["query"]["pages"])
-    return queue
 
+        for page in result["query"]["pages"]:
+            if "links" in page.keys():
+                queue = queues[page["title"]]
+                for link in page["links"]:
+                    queue.append(link["title"])
 
-def targetPagePresent(targetPage: str, links):
-    return any(link["title"] == targetPage for link in links)
-
-
-def addToQueue(queue, links):
-    for link in links:
-        if "pageid" in link.keys():
-            queue.append(link)
+    return queues
 
 
 main()
