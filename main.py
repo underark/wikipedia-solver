@@ -2,11 +2,7 @@ import json
 import requests
 from collections import deque
 
-<<<<<<< HEAD
-maxDepth = 3
-=======
 maxDepth = 2
->>>>>>> bi-bfs
 
 with open("resources/header.txt", "r") as file:
     userAgentString = file.read().strip()
@@ -14,29 +10,6 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-<<<<<<< HEAD
-    result = findTargetPage("Japan", "Archipelago", set(), [])
-    print(result)
-
-
-def findTargetPage(title: str, targetPage: str, explored, path, depth=0):
-    print(f"Title is {title} and target is {targetPage} and depth is {depth}")
-    explored.add(title)
-    path.append(title)
-    if title == targetPage:
-        return path
-    elif depth < maxDepth:
-        links = getLinks(title)
-        for link in links:
-            if link["title"] not in explored:
-                result = findTargetPage(
-                    link["title"], targetPage, explored, path, depth + 1
-                )
-                if result:
-                    return result
-    path.pop()
-    return False
-=======
     result = findTargetPage("Japan", "Continent")
     print(result)
 
@@ -120,7 +93,6 @@ def findTargetPage(
                     tempQueue.append(backlink)
         endQueue.extend(tempQueue)
         tempQueue.clear()
->>>>>>> bi-bfs
 
 
 # Add a type annotation for params?
