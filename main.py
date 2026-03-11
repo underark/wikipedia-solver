@@ -47,7 +47,7 @@ def findTargetPage(
         currentExplored = startExplored if queue == startQueue else endExplored
         currentPaths = startPaths if queue == startQueue else endPaths
         opposingExplored = (
-            startExplored if currentExplored == endExplored else startExplored
+            startExplored if currentExplored == endExplored else endExplored
         )
 
         while len(queue) > 0:
