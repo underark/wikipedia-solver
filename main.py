@@ -1,3 +1,4 @@
+import json
 import requests
 from collections import deque
 
@@ -9,7 +10,7 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Japan", "Archipelago")
+    result = findTargetPage("Japan", "Vietnam")
     print(result)
 
 
@@ -20,7 +21,8 @@ def findTargetPage(
     endQueue=None,
     startExplored=None,
     endExplored=None,
-    paths=None,
+    startPaths=None,
+    endPaths=None,
 ):
     if startQueue is None or endQueue is None:
         startQueue, endQueue = deque(), deque()
@@ -28,31 +30,45 @@ def findTargetPage(
     if startExplored is None or endExplored is None:
         startExplored, endExplored = set(), set()
 
-    if paths is None:
-        paths = {}
+    if startPaths is None or endPaths is None:
+        startPaths, endPaths = {}, {}
 
     startQueue.append(start)
-    startExplored.add(start)
     endQueue.append(targetPage)
+    startExplored.add(start)
     endExplored.add(targetPage)
-    while len(startQueue) > 0 or len(endQueue) > 0:
-        startNext = startQueue.popleft()
-        endNext = endQueue.popleft()
-        if not startExplored.isdisjoint(endExplored):
-            return True
-        else:
-            linksDict = getLinks(startNext, endNext)
-            for key in linksDict:
-                links = linksDict[key]
-                if key == startNext:
-                    for link in links:
-                        startQueue.append(link)
+    tempQueue = []
+
+    while True:
+        while len(startQueue) > 0:
+            next = startQueue.popleft()
+            print("Exploring start: " + next)
+            if next in endExplored:
+                return True
+            else:
+                links = getLinks(next)
+                for link in links:
+                    if link not in startExplored:
+                        print("Adding start link: " + link)
+                        tempQueue.append(link)
                         startExplored.add(link)
-                else:
-                    for link in links:
-                        endQueue.append(link)
-                        endExplored.add(link)
-    return False
+        startQueue.extend(tempQueue)
+        tempQueue.clear()
+
+        while len(endQueue) > 0:
+            next = endQueue.popleft()
+            print("Exploring end: " + next)
+            if next in startExplored:
+                return True
+            else:
+                backlinks = getBacklinks(next)
+                for backlink in backlinks:
+                    if backlink not in endExplored:
+                        print("Adding start link: " + backlink)
+                        tempQueue.append(backlink)
+                        endExplored.add(backlink)
+        endQueue.extend(tempQueue)
+        tempQueue.clear()
 
 
 # Add a type annotation for params?
@@ -63,13 +79,14 @@ def makeRequest(params, headers):
     return rJson
 
 
-def getLinks(title: str, title2):
-    queues = {}
+def getLinks(title: str):
+    queue = []
     result = makeRequest(
         (
             ("action", "query"),
             ("prop", "links"),
-            ("titles", title + "|" + title2),
+            ("titles", title),
+            ("plnamespace", "0"),
             ("format", "json"),
             ("formatversion", "2"),
             ("pllimit", "max"),
@@ -78,10 +95,7 @@ def getLinks(title: str, title2):
     )
 
     for page in result["query"]["pages"]:
-        if "title" in page.keys():
-            queues.update({page["title"]: []})
         if "links" in page.keys():
-            queue = queues[page["title"]]
             for link in page["links"]:
                 queue.append(link["title"])
 
@@ -90,7 +104,8 @@ def getLinks(title: str, title2):
             (
                 ("action", "query"),
                 ("prop", "links"),
-                ("titles", title + "|" + title2),
+                ("titles", title),
+                ("plnamespace", "0"),
                 ("format", "json"),
                 ("formatversion", "2"),
                 ("plcontinue", result["continue"]["plcontinue"]),
@@ -101,11 +116,51 @@ def getLinks(title: str, title2):
 
         for page in result["query"]["pages"]:
             if "links" in page.keys():
-                queue = queues[page["title"]]
                 for link in page["links"]:
                     queue.append(link["title"])
 
-    return queues
+    return queue
+
+
+def getBacklinks(title: str):
+    queue = []
+    result = makeRequest(
+        (
+            ("action", "query"),
+            ("list", "backlinks"),
+            ("bltitle", title),
+            ("bllimit", "max"),
+            ("blnamespace", "0"),
+            ("format", "json"),
+            ("formatversion", "2"),
+        ),
+        headers,
+    )
+
+    if len(result["query"]["backlinks"]) > 0:
+        for backlink in result["query"]["backlinks"]:
+            queue.append(backlink["title"])
+
+    while "continue" in result.keys():
+        result = makeRequest(
+            (
+                ("action", "query"),
+                ("list", "backlinks"),
+                ("bltitle", title),
+                ("bllimit", "max"),
+                ("blnamespace", "0"),
+                ("blcontinue", result["continue"]["blcontinue"]),
+                ("format", "json"),
+                ("formatversion", "2"),
+            ),
+            headers,
+        )
+
+    if len(result["query"]["backlinks"]) > 0:
+        for backlink in result["query"]["backlinks"]:
+            queue.append(backlink["title"])
+
+    return queue
 
 
 main()
