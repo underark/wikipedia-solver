@@ -10,7 +10,7 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Money", "Pasta")
+    result = findTargetPage("Japan", "Continent")
     print(result)
 
 
@@ -71,29 +71,26 @@ def findTargetPage(
         while len(endQueue) > 0:
             next = endQueue.popleft()
             print("Exploring end: " + next)
-            if next in startExplored:
-                return True
-            else:
-                backlinks = getBacklinks(next)
-                for backlink in backlinks:
-                    if backlink not in endExplored:
-                        print("Adding end link: " + backlink)
-                        endExplored.add(backlink)
-                        endPaths.update({backlink: next})
-                        if backlink in startExplored:
-                            path = []
-                            currentNode = backlink
-                            while currentNode != start:
-                                path.append(currentNode)
-                                currentNode = startPaths[currentNode]
-                            path.append(start)
-                            path.reverse()
-                            currentNode = backlink
-                            while currentNode != targetPage:
-                                currentNode = endPaths[currentNode]
-                                path.append(currentNode)
-                            return path
-                        tempQueue.append(backlink)
+            backlinks = getBacklinks(next)
+            for backlink in backlinks:
+                if backlink not in endExplored:
+                    print("Adding end link: " + backlink)
+                    endExplored.add(backlink)
+                    endPaths.update({backlink: next})
+                    if backlink in startExplored:
+                        path = []
+                        currentNode = backlink
+                        while currentNode != start:
+                            path.append(currentNode)
+                            currentNode = startPaths[currentNode]
+                        path.append(start)
+                        path.reverse()
+                        currentNode = backlink
+                        while currentNode != targetPage:
+                            currentNode = endPaths[currentNode]
+                            path.append(currentNode)
+                        return path
+                    tempQueue.append(backlink)
         endQueue.extend(tempQueue)
         tempQueue.clear()
 
@@ -104,6 +101,13 @@ def makeRequest(params, headers):
     r = requests.get(url, headers=headers, params=params)
     rJson = r.json()
     return rJson
+
+
+def getNeighbors(title: str, linkType: str):
+    if linkType == "link":
+        return getLinks(title)
+    else:
+        return getBacklinks(title)
 
 
 def getLinks(title: str):
