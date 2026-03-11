@@ -10,7 +10,7 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Japan", "Vietnam")
+    result = findTargetPage("Money", "Pasta")
     print(result)
 
 
@@ -37,21 +37,34 @@ def findTargetPage(
     endQueue.append(targetPage)
     startExplored.add(start)
     endExplored.add(targetPage)
+    startPaths.update({start: start})
+    endPaths.update({targetPage: targetPage})
     tempQueue = []
 
     while True:
         while len(startQueue) > 0:
             next = startQueue.popleft()
             print("Exploring start: " + next)
-            if next in endExplored:
-                return True
-            else:
-                links = getLinks(next)
-                for link in links:
-                    if link not in startExplored:
-                        print("Adding start link: " + link)
-                        tempQueue.append(link)
-                        startExplored.add(link)
+            links = getLinks(next)
+            for link in links:
+                if link not in startExplored:
+                    print("Adding start link: " + link)
+                    startExplored.add(link)
+                    startPaths.update({link: next})
+                    if link in endExplored:
+                        path = []
+                        currentNode = link
+                        while currentNode != start:
+                            path.append(currentNode)
+                            currentNode = startPaths[currentNode]
+                        path.append(start)
+                        path.reverse()
+                        currentNode = link
+                        while currentNode != targetPage:
+                            currentNode = endPaths[currentNode]
+                            path.append(currentNode)
+                        return path
+                    tempQueue.append(link)
         startQueue.extend(tempQueue)
         tempQueue.clear()
 
@@ -64,9 +77,23 @@ def findTargetPage(
                 backlinks = getBacklinks(next)
                 for backlink in backlinks:
                     if backlink not in endExplored:
-                        print("Adding start link: " + backlink)
-                        tempQueue.append(backlink)
+                        print("Adding end link: " + backlink)
                         endExplored.add(backlink)
+                        endPaths.update({backlink: next})
+                        if backlink in startExplored:
+                            path = []
+                            currentNode = backlink
+                            while currentNode != start:
+                                path.append(currentNode)
+                                currentNode = startPaths[currentNode]
+                            path.append(start)
+                            path.reverse()
+                            currentNode = backlink
+                            while currentNode != targetPage:
+                                currentNode = endPaths[currentNode]
+                                path.append(currentNode)
+                            return path
+                        tempQueue.append(backlink)
         endQueue.extend(tempQueue)
         tempQueue.clear()
 
