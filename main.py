@@ -1,4 +1,3 @@
-import json
 import requests
 from collections import deque
 
@@ -10,7 +9,7 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Money", "Pasta")
+    result = findTargetPage("Poinsot's ellipsoid", "Florjan Lipuš")
     print(result)
 
 
