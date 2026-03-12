@@ -14,7 +14,6 @@ def main():
 def findTargetPage(start: str, targetPage: str):
     startFrontier = Frontier(start, getLinks)
     endFrontier = Frontier(targetPage, getBacklinks)
-    tempQueue = []
     while True:
         currentFrontier = (
             startFrontier
@@ -26,24 +25,15 @@ def findTargetPage(start: str, targetPage: str):
             startFrontier if currentFrontier is endFrontier else endFrontier
         )
 
-        while len(currentFrontier.queue) > 0:
-            next = currentFrontier.queue.popleft()
-            print("Exploring: " + next)
-            links = currentFrontier.func(next)
-            for link in links:
-                if link not in currentFrontier.explored:
-                    print("Adding link: " + link)
-                    currentFrontier.markExplored(link, next)
-                    if link in opposingFrontier.explored:
-                        startPath = startFrontier.constructPath(link)
-                        endPath = endFrontier.constructPath(link)
-                        startPath.reverse()
-                        startPath.append(link)
-                        startPath.extend(endPath)
-                        return startPath
-                    tempQueue.append(link)
-        currentFrontier.queue.extend(tempQueue)
-        tempQueue.clear()
+        intersection = currentFrontier.visitNodes(opposingFrontier.explored)
+
+        if intersection is not None:
+            startPath = startFrontier.constructPath(intersection)
+            endPath = endFrontier.constructPath(intersection)
+            startPath.reverse()
+            startPath.append(intersection)
+            startPath.extend(endPath)
+            return startPath
 
 
 # Add a type annotation for params?

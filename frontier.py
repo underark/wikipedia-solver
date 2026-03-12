@@ -11,6 +11,22 @@ class Frontier:
         self.queue.append(start)
         self.markExplored(start, start)
 
+    def visitNodes(self, opposingExplored):
+        tempQueue = []
+        while len(self.queue) > 0:
+            next = self.queue.popleft()
+            print("Exploring: " + next)
+            links = self.func(next)
+            for link in links:
+                if link not in self.explored:
+                    print("Adding link: " + link)
+                    self.markExplored(link, next)
+                    if link in opposingExplored:
+                        return link
+                    tempQueue.append(link)
+        self.queue.extend(tempQueue)
+        return None
+
     def constructPath(self, intersect):
         path = []
         currentNode = intersect
