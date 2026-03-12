@@ -1,7 +1,5 @@
 import requests
-from collections import deque
-
-maxDepth = 2
+from frontier import Frontier
 
 with open("resources/header.txt", "r") as file:
     userAgentString = file.read().strip()
@@ -9,70 +7,42 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Poinsot's ellipsoid", "Florjan Lipuš")
+    result = findTargetPage("Money", "Pasta")
     print(result)
 
 
-def findTargetPage(
-    start: str,
-    targetPage: str,
-    startQueue=None,
-    endQueue=None,
-    startExplored=None,
-    endExplored=None,
-    startPaths=None,
-    endPaths=None,
-):
-    if startQueue is None or endQueue is None:
-        startQueue, endQueue = deque(), deque()
-
-    if startExplored is None or endExplored is None:
-        startExplored, endExplored = set(), set()
-
-    if startPaths is None or endPaths is None:
-        startPaths, endPaths = {}, {}
-
-    startQueue.append(start)
-    endQueue.append(targetPage)
-    startExplored.add(start)
-    endExplored.add(targetPage)
-    startPaths.update({start: start})
-    endPaths.update({targetPage: targetPage})
+def findTargetPage(start: str, targetPage: str):
+    startFrontier = Frontier(start, getLinks)
+    endFrontier = Frontier(targetPage, getBacklinks)
     tempQueue = []
-
     while True:
-        queue = startQueue if len(startQueue) <= len(endQueue) else endQueue
-        linkType = "link" if queue == startQueue else "backlink"
-        currentExplored = startExplored if queue == startQueue else endExplored
-        currentPaths = startPaths if queue == startQueue else endPaths
-        opposingExplored = (
-            startExplored if currentExplored == endExplored else endExplored
+        currentFrontier = (
+            startFrontier
+            if len(startFrontier.queue) <= len(endFrontier.queue)
+            else endFrontier
         )
 
-        while len(queue) > 0:
-            next = queue.popleft()
+        opposingFrontier = (
+            startFrontier if currentFrontier is endFrontier else endFrontier
+        )
+
+        while len(currentFrontier.queue) > 0:
+            next = currentFrontier.queue.popleft()
             print("Exploring: " + next)
-            links = getNeighbors(next, linkType)
+            links = currentFrontier.func(next)
             for link in links:
-                if link not in currentExplored:
+                if link not in currentFrontier.explored:
                     print("Adding link: " + link)
-                    currentExplored.add(link)
-                    currentPaths.update({link: next})
-                    if link in opposingExplored:
-                        path = []
-                        currentNode = link
-                        while currentNode != start:
-                            path.append(currentNode)
-                            currentNode = startPaths[currentNode]
-                        path.append(start)
-                        path.reverse()
-                        currentNode = link
-                        while currentNode != targetPage:
-                            currentNode = endPaths[currentNode]
-                            path.append(currentNode)
-                        return path
+                    currentFrontier.markExplored(link, next)
+                    if link in opposingFrontier.explored:
+                        startPath = startFrontier.constructPath(link)
+                        endPath = endFrontier.constructPath(link)
+                        startPath.reverse()
+                        startPath.append(link)
+                        startPath.extend(endPath)
+                        return startPath
                     tempQueue.append(link)
-        queue.extend(tempQueue)
+        currentFrontier.queue.extend(tempQueue)
         tempQueue.clear()
 
 
@@ -82,13 +52,6 @@ def makeRequest(params, headers):
     r = requests.get(url, headers=headers, params=params)
     rJson = r.json()
     return rJson
-
-
-def getNeighbors(title: str, linkType: str):
-    if linkType == "link":
-        return getLinks(title)
-    else:
-        return getBacklinks(title)
 
 
 def getLinks(title: str):
