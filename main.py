@@ -7,7 +7,7 @@ with open("resources/header.txt", "r") as file:
 
 
 def main():
-    result = findTargetPage("Money", "Pasta")
+    result = findTargetPage("Japan", "Baseball")
     print(result)
 
 
